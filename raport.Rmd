@@ -1,0 +1,156 @@
+---
+title: "Praca domowa nr 4"
+author: Anna Kozioł
+output: pdf_document
+---
+
+
+
+# Cel zadania 
+
+* Dane przedstawiają wartości indeksów AR i FM  dla funkcji hclust oraz genie testowania algorytmu skupień, dla różnych parametróworaz dla  przeskalowanych danych. Zakładamy tutaj, ze algorytm analizy skupien jest dobry, jesli generuje podziały podobne do referencyjnych
+etykiet. 
+
+* Celem raportu jest zbadanie jakości działania każdego algorytmu dla wszytskich zbiorów oraz zmieniających się parametrów poprzez analizę indeksów , których wartości przyjmują wartości (0,1).
+
+
+```{r, echo= FALSE, cache=TRUE}
+hclust_complete <- read.csv2("hclust_complete.csv", header = T)
+hclust_median <- read.csv2("hclust_median.csv")
+hclust_single <- read.csv2("hclust_single.csv")
+hclust_average <- read.csv2("hclust_average.csv")
+genie_0.9 <- read.csv2("genie_0.9.csv")
+genie_0.1 <- read.csv2("genie_0.1.csv")
+genie_0.01 <- read.csv2("genie_0.01.csv")
+
+``` 
+
+* Przykładowy wygenerowany plik dla ustalonego algorytmu  zapisany został w poniższej postaci:
+
+```{r, cache=T, echo=F}
+head(hclust_complete)
+```
+
+* Dla każdego rozważanego zbioru otzymaliśmy wartość indeksu.Zatem kolumnę takiego zbioru możemy potraktować jako próbkę, o długości równej ilości wczytanych zbiorów. Zbadajmy zachowane się funkcji indeksem FM 
+
+##  Jak "dobrze" zachowuje się algorytm mierzony indeksem FM? 
+```{r, cache=T, echo=F, fig.height=4.4}
+library(data.table)
+par(mfrow=c(1,1))
+x <- hclust_complete[,2]
+y <- genie_0.1[,2]
+z<- hclust_median[,2]
+h<- genie_0.01[,2]
+boxplot(x,y,z,h, horizontal = F, las = 1, names = c("hclust_complete", "genie_0.1","hclust_median", "genie_0.01"), col= c("aquamarine", "antiquewhite", "aquamarine2", "antiquewhite2"),main="Poprawność algorytmu miarą FM" )
+
+```
+ 
+ 
+ * Widać że średno algorytm z pakietu Genie przy współczynniku 0.1 oraz 0.01 działa lepiej niż funckja hclust przyjmująca parametry odpowiednio     complete i median. 
+ * Średnia poprawność algorytmu 'genie'mierzona indeksem AR wynosi ok 90 %.
+ * W przypadku funkcji 'hclust' wyniki są poprawne w średnio 60% - 70% 
+ * Widać też że algorytm hclust jest też mniej stabilny, o czym świadczy rozrzut punktów. 
+ 
+ 
+```{r, cache=T, echo=F, fig.height=4.4}
+par(mfrow=c(1,1))
+x <- hclust_complete[,3]
+y <- genie_0.1[,3]
+z<- hclust_median[,3]
+h<- genie_0.01[,3]
+a <- hclust_average[,3]
+b <- genie_0.9[,3]
+boxplot(x,y,z,h, horizontal = F, las = 1, names = c("hclust_complete", "genie_0.1","hclust_median", "genie_0.01"), col=c("darkslategray3", "darkorange"),main="Poprawność algorytmu miarą AR" )
+
+```
+
+* Na podtsawie wykresów skrzynkowyh możemy stwierdzić zdecydowaną przewagę algorytmu 'genie' nad 'hclust' względem miary FM.
+* Poprawność dziłania algorytmu 'hclust' określa się średnio dla 50% rozważanych przypadków.
+* Porównując wyniki możemy również stwierdzić że dla parametrów 'median' i 'complete' indeks AR wskazuje wyższą poprawność algorytmu w porównaniu do indeksu FM.  
+
+```{r, cache=T, echo=F, fig.height=4.4}
+a <- hclust_average[,3]
+b <- genie_0.9[,3]
+ boxplot(a,b, horizontal = F, las = 1, names = c( "hclust_average" , "genie_0.9"), col=c("lightblue", "orange") ,main="Poprawność algorytmu miarą AR" )
+
+```
+
+* Algorytm 'genie' daje średnio lepsze wyniki, jednakże przy parametrze współczynnika Giniego = 0.9 jest mało stabliny, o czym świadczy duży rozrzut punktów. Na wykresie porównanie z funkcja hclust z parametrem średniej.  Przy takim porównaniu, funkcja hclust wypada trochę lepiej. 
+
+
+## Badanie wpływu standaryzacji zmiennych na jakość działania algorytmu 'genie'
+
+
+```{r, echo=F, cache=T}
+
+srednie <- c( mean( genie_0.01[,3]),  mean( genie_0.01[,3]) , mean( genie_0.9[,3])   )
+
+sredniaFM_01 <-mean(genie_0.1[,2])
+sredniaFM_st_01 <-mean(genie_0.1[,4])
+sredniaAR_st_01<-mean(genie_0.1[,3])
+sredniaAR_01<-mean(genie_0.1[,5])
+
+sredniaAR_001<-mean(genie_0.01[,3])
+sredniaFM_001 <-mean(genie_0.01[,2])
+sredniaFM_st_001 <-mean(genie_0.01[,4])
+sredniaAR_st_001<-mean(genie_0.01[,5])
+
+sredniaAR_09<-mean(genie_0.9[,3])
+sredniaFM_09 <-mean(genie_0.9[,2])
+sredniaFM_st_09 <-mean(genie_0.9[,4])
+sredniaAR_st_09<-mean(genie_0.9[,5])
+
+ M <- cbind(c(sredniaAR_01,sredniaFM_01,sredniaFM_st_01,sredniaAR_st_01),c(sredniaAR_09,sredniaFM_09,sredniaFM_st_09,sredniaAR_st_09), c(sredniaAR_001,sredniaFM_001, sredniaFM_st_001, sredniaAR_st_001 ))
+ 
+ 
+barplot(as.matrix(M), ylim=c(0,1), main="Wykres średnich indeksów w zależności od wartości kolumn", ylab = "Indeks", cex.lab =1.45, cex.main = 1.4, beside=TRUE, col=c("chartreuse", "cornsilk", "pink", "deepskyblue"), las = 1, names.arg=c("genie_0.1", "genie_0.9", "genie_0.01")
+)
+legend("topleft", c("AR","FM","FM_st","AR_st"), cex=0.9, bty="n", fill=c("chartreuse", "cornsilk", "pink", "deepskyblue"), inset = c(0.28,0))
+#g_0.1_s <- genie_0.1[,5]
+
+
+
+```
+
+* W większości rozważanych algorytmów standaryzacja zmiennych obniża jakość używanych funkcji. Jedynie dla funkcji genie z parametrem 0.9 stadndaryzacja kolumn poprawiła wyniki indeksów.
+* Zauważalne jest również że FM średnio wskazuje wyższą poprawność algorytmu niż AR. 
+
+
+## Badanie wpływu standaryzacji zmiennych na jakość działania algorytmu 'hclust'
+
+```{r, echo=FALSE}
+sredniaAR_ave <-mean(hclust_average[,3])
+sredniaFM_ave <-mean(hclust_average[,2])
+sredniaFM_ave_st<-mean(hclust_average[,4])
+sredniaAR_ave_st<-mean(hclust_average[,5])
+
+sredniaAR_com <-mean(hclust_complete[,3])
+sredniaFM_com <-mean(hclust_complete[,2])
+sredniaFM_com_st<-mean(hclust_complete[,4])
+sredniaAR_com_st<-mean(hclust_complete[,5])
+
+
+sredniaAR_med <-mean(hclust_median[,3])
+sredniaFM_med <-mean(hclust_median[,2])
+sredniaFM_med_st<-mean(hclust_median[,4])
+sredniaAR_med_st<-mean(hclust_median[,5])
+
+sredniaAR_sin <-mean(hclust_single[,3])
+sredniaFM_sin <-mean(hclust_single[,2])
+sredniaFM_sin_st<-mean(hclust_single[,4])
+sredniaAR_sin_st<-mean(hclust_single[,5])
+
+
+ M <- cbind(c(sredniaAR_ave,sredniaFM_ave,sredniaFM_ave_st,sredniaAR_ave_st),c(sredniaAR_com, sredniaFM_com, sredniaFM_com_st, sredniaAR_com_st ), c(sredniaAR_med, sredniaFM_med, sredniaFM_med_st, sredniaAR_med_st), c(sredniaAR_sin, sredniaFM_sin,  sredniaFM_sin_st, sredniaAR_sin_st  ))
+ 
+ 
+barplot(as.matrix(M), ylim=c(0,1), main="Wykres średnich indeksów w zależności od wartości kolumn", cex.lab =1.45, cex.main = 1.4, beside=TRUE, col=c("burlywood1", "cadetblue1", "chartreuse1", "chocolate1"), las = 1, names.arg=c("hclust_average", "hclust_complete", "hclust_median", "hclust_single")
+)
+
+legend("topright", c("AR","FM","FM_st","AR_st"), cex=0.9, bty="n", fill=c("burlywood1", "cadetblue1", "chartreuse1", "chocolate1"), inset = c(-0,0))
+#g_0.1_s <- genie_0.1[,5]
+
+```
+
+* Standaryzacja kolumn nie wpływa pozytywnie na wyniki algotytmów analizy skupień. 
+
